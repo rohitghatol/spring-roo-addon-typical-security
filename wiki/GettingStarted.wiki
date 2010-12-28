@@ -7,6 +7,17 @@ Run following code on Roo Shell
 
 $roo >osgi start --url http://spring-roo-addon-typical-security.googlecode.com/svn/repo/com/xsoftwarelabs/spring/roo/addon/typicalsecurity/com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.1.BUILD/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.1.BUILD.jar
 
+
+$roo >osgi ps
+
+You will see a line as follows, which indicates addon has been installed
+[  72] [Active     ] [    1] spring-roo-addon-typical-security (0.1.1.BUILD)
+
+= Uninstallation =
+
+$roo > addon remove --bundleSymbolicName com.xsoftwarelabs.spring.roo.addon.typicalsecurity
+
+= Usage =
 $roo > project --topLevelPackage com.test --projectName `TestProject`
 
 $roo > persistence setup --database ... --provider ....
@@ -24,7 +35,7 @@ $> mvn tomcat:run
 
 and go to http://localhost:8080/TestProject
 
-This will take you to login page, login using "admin" and "admin". You will see Controllers for UserModel.
+This will take you to login page, login using "admin" and "admin". You will see Controllers for `UserModel`.
 
 Create UserModel with a email address and password.
 
@@ -43,7 +54,7 @@ The addon does following
 
 4. Inject Database based Authentication Provider into applicationContext-security.xml
 
-5. Project "/" url with access "IsAuthenticated()"
+5. Project "/" url with access `IsAuthenticated()`
 
 
 = Code Changes =
