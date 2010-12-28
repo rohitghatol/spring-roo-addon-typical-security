@@ -28,16 +28,16 @@ This will take you to login page, login using "admin" and "admin". You will see 
 
 Create UserModel with a email address and password.
 
-Now logout and login using newly created UserModel's email address and password.
+Now logout and login using newly created `UserModel`'s email address and password.
 
 
 = Effect =
 
 The addon does following
 
-1. Creates Entity classes namely UserModel, RoleModel, UserRoleModel
+1. Creates Entity classes namely `UserModel`, `RoleModel`, `UserRoleModel`
 
-2. Create Controllers for UserModel, RoleModel, UserRoleModel
+2. Create Controllers for `UserModel`, `RoleModel`, `UserRoleModel`
 
 3. Run "security setup" addon
 
