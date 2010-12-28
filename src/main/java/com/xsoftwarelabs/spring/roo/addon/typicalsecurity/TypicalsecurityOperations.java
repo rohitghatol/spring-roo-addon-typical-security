@@ -1,6 +1,5 @@
 package com.xsoftwarelabs.spring.roo.addon.typicalsecurity;
 
-import org.springframework.roo.model.JavaType;
 
 /**
  * Interface of commands that are available via the Roo shell.
@@ -10,8 +9,6 @@ import org.springframework.roo.model.JavaType;
 public interface TypicalsecurityOperations {
 
 	boolean isCommandAvailable();
-
-	void annotateType(JavaType type);
 	
-	void setup();
+	void setup(String entityPackage,String controllerPackage);
 }
