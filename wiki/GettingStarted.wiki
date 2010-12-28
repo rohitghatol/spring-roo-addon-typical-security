@@ -11,7 +11,8 @@ $roo >osgi start --url http://spring-roo-addon-typical-security.googlecode.com/s
 $roo >osgi ps
 
 You will see a line as follows, which indicates addon has been installed
-[  72] [Active     ] [    1] spring-roo-addon-typical-security (0.1.1.BUILD)
+
+`[  72] [Active     ] [    1] spring-roo-addon-typical-security (0.1.1.BUILD)`
 
 = Uninstallation =
 
