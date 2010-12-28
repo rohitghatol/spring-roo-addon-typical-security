@@ -1,0 +1,38 @@
+#summary Getting Started
+
+= Installation =
+
+Run following code on Roo Shell
+$roo >addon install --url http://spring-roo-addon-typical-security.googlecode.com/svn/repo/com/xsoftwarelabs/spring/roo/addon/typicalsecurity/com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.1.BUILD/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.1.BUILD.jar
+
+$roo > project --topLevelPackage com.test --projectName TestProject
+$roo > persistence setup --database ... --provider ....
+$roo > Typicalsecurity setup
+
+
+Alternatively, you can provide options to Typicalsecurity setup
+$roo > Typicalsecurity setup --entityPackage ~.model --controllerPackage ~.web
+
+Once you have injected Typical Security
+$> mvn tomcat:run
+
+and go to http://localhost:8080/TestProject
+
+This will take you to login page, login using "admin" and "admin". You will see Controllers for UserModel.
+Create UserModel with a email address and password.
+
+Now logout and login using newly created UserModel's email address and password.
+
+
+= Effect =
+The addon does following
+1. Creates Entity classes namely UserModel, RoleModel, UserRoleModel
+2. Create Controllers for UserModel, RoleModel, UserRoleModel
+3. Run "security setup" addon
+4. Inject Database based Authentication Provider into applicationContext-security.xml
+5. Project "/" url with access "IsAuthenticated()"
+
+
+= Code Changes =
+
+TBD
