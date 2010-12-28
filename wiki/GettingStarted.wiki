@@ -38,7 +38,7 @@ and go to http://localhost:8080/TestProject
 
 This will take you to login page, login using "admin" and "admin". You will see Controllers for `UserModel`.
 
-Create UserModel with a email address and password.
+Create `UserModel` with a email address and password.
 
 Now logout and login using newly created `UserModel`'s email address and password.
 
