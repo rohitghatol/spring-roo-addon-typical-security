@@ -5,7 +5,7 @@
 
 Run following code on Roo Shell
 
-$roo >addon install --url http://spring-roo-addon-typical-security.googlecode.com/svn/repo/com/xsoftwarelabs/spring/roo/addon/typicalsecurity/com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.1.BUILD/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.1.BUILD.jar
+$roo >osgi start --url http://spring-roo-addon-typical-security.googlecode.com/svn/repo/com/xsoftwarelabs/spring/roo/addon/typicalsecurity/com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.1.BUILD/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.1.BUILD.jar
 
 $roo > project --topLevelPackage com.test --projectName `TestProject`
 
