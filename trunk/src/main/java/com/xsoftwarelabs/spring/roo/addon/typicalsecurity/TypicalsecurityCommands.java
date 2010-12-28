@@ -28,16 +28,13 @@ public class TypicalsecurityCommands implements CommandMarker {
 	
 	@CliAvailabilityIndicator({"Typicalsecurity setup", "Typicalsecurity add"})
 	public boolean isPropertyAvailable() {
-		return true;  // it's safe to always see the properties we expose
+		return operations.isCommandAvailable();
 	}
 	
-	@CliCommand(value="Typicalsecurity add", help="Some helpful description")
-	public void add(@CliOption(key="type", mandatory=true, help="The java type to apply this annotation to") JavaType target) {
-		operations.annotateType(target);
-	}
 	
-	@CliCommand(value="Typicalsecurity setup", help="Setup Typicalsecurity addon")
-	public void setup() {
-		operations.setup();
+	
+	@CliCommand(value = "Typicalsecurity setup", help = "Setup Typicalsecurity addon")
+	public void setup(@CliOption(key = "entityPackage", mandatory = false, help = "entity package",specifiedDefaultValue="~.model",unspecifiedDefaultValue="~.model") String entityPackage,@CliOption(key = "controllerPackage", mandatory = false, help = "controller package",specifiedDefaultValue="~.web",unspecifiedDefaultValue="~.web") String controllerPackage) {
+		operations.setup( entityPackage,  controllerPackage);
 	}
 }
