@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import org.apache.felix.scr.annotations.Component;
@@ -26,6 +30,8 @@ import org.springframework.roo.support.util.XmlUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import com.xsoftwarelabs.spring.roo.addon.typicalsecurity.utils.TokenReplacementFileCopyUtils;
+
 /**
  * Implementation of commands that are available via the Roo shell.
  * 
@@ -36,37 +42,43 @@ import org.w3c.dom.Element;
 public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations {
 	private static Logger logger = Logger
 			.getLogger(TypicalsecurityOperations.class.getName());
-	@Reference private MetadataService metadataService;
-	@Reference FileManager fileManager;
-	@Reference PathResolver pathResolver;
-    @Reference private Shell shell;
-    @Reference private ClasspathOperations classpathOperations;
+	@Reference
+	private MetadataService metadataService;
+	@Reference
+	FileManager fileManager;
+	@Reference
+	PathResolver pathResolver;
+	@Reference
+	private Shell shell;
+	@Reference
+	private ClasspathOperations classpathOperations;
 
-
-    private static char separator = File.separatorChar;
+	private static char separator = File.separatorChar;
 
 	public boolean isCommandAvailable() {
 		return getPathResolver() != null
 				&& classpathOperations.isPersistentClassAvailable();
 	}
 
-	public void setup(String entityPackage, String controllerPackage) {
+	public String setup(String entityPackage, String controllerPackage) {
 
 		createUserRoleEntities(entityPackage);
 		createControllers(entityPackage, controllerPackage);
 		injectDatabasebasedSecurity(entityPackage);
 
+		return "Done";
 	}
 
 	/**
 	 * Create All the entities required for User, Role and User Role
+	 * 
 	 * @param entityPackage
 	 */
 	private void createUserRoleEntities(String entityPackage) {
 
-		//-----------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------
 		// Create User entity
-		//-----------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------
 		shell.executeCommand("entity --class " + entityPackage
 				+ ".UserModel --testAutomatically");
 		shell.executeCommand("field string --fieldName firstName --sizeMin 1 --notNull");
@@ -74,17 +86,17 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		shell.executeCommand("field string --fieldName emailAddress --sizeMin 1 --notNull --unique");
 		shell.executeCommand("field string --fieldName password --sizeMin 1 --notNull");
 
-		//-----------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------
 		// Create Role entity
-		//-----------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------
 		shell.executeCommand("entity --class " + entityPackage
 				+ ".RoleModel --testAutomatically");
 		shell.executeCommand("field string --fieldName roleName --sizeMin 1 --notNull --unique");
 		shell.executeCommand("field string --fieldName roleDescription --sizeMin --sizeMax 200 --notNull");
 
-		//-----------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------
 		// Create User Role Mapping
-		//-----------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------
 		shell.executeCommand("entity --class " + entityPackage
 				+ ".UserRoleModel --testAutomatically");
 		shell.executeCommand("field ref --fieldName userEntry --type "
@@ -92,10 +104,10 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		shell.executeCommand("field ref --fieldName roleEntry --type "
 				+ entityPackage + ".RoleModel --notNull");
 
-
-		//-----------------------------------------------------------------------------------
-		// Create Finders for find user by email address and find user role by user 
-		//-----------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------
+		// Create Finders for find user by email address and find user role by
+		// user
+		// -----------------------------------------------------------------------------------
 		shell.executeCommand("finder add findUserModelsByEmailAddress --class ~.model.UserModel");
 		shell.executeCommand("finder add findUserRoleModelsByUserEntry --class ~.model.UserRoleModel");
 
@@ -103,29 +115,30 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 
 	/**
 	 * Create an Controller for User, Role and UserRole
+	 * 
 	 * @param entityPackage
 	 * @param controllerPackage
 	 */
 	private void createControllers(String entityPackage,
 			String controllerPackage) {
 
-		//-----------------------------------------------------------------------------------
-		// Controller for User 
-		//-----------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------
+		// Controller for User
+		// -----------------------------------------------------------------------------------
 		shell.executeCommand("controller scaffold --class " + controllerPackage
 				+ "UserModelController --entity " + entityPackage
 				+ ".UserModel");
 
-		//-----------------------------------------------------------------------------------
+		// -----------------------------------------------------------------------------------
 		// Controller for Role
-		//-----------------------------------------------------------------------------------		
+		// -----------------------------------------------------------------------------------
 		shell.executeCommand("controller scaffold --class " + controllerPackage
 				+ "RoleModelController --entity " + entityPackage
 				+ ".RoleModel");
-		
-		//-----------------------------------------------------------------------------------
+
+		// -----------------------------------------------------------------------------------
 		// Controller for User Role
-		//-----------------------------------------------------------------------------------		
+		// -----------------------------------------------------------------------------------
 		shell.executeCommand("controller scaffold --class " + controllerPackage
 				+ "UserRoleModelController --entity " + entityPackage
 				+ ".UserRoleModel");
@@ -134,31 +147,35 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 
 	/**
 	 * Inject database based authentication provider in Spring Security
+	 * 
 	 * @param entityPackage
 	 */
 	private void injectDatabasebasedSecurity(String entityPackage) {
-		
-		//----------------------------------------------------------------------
+
+		// ----------------------------------------------------------------------
 		// Run Security Setup Addon
-		//----------------------------------------------------------------------
+		// ----------------------------------------------------------------------
 		shell.executeCommand("security setup");
-		
-		//----------------------------------------------------------------------
-		// Copy DatabaseAuthenticationProvider from template 
-		//----------------------------------------------------------------------
+
+		// ----------------------------------------------------------------------
+		// Copy DatabaseAuthenticationProvider from template
+		// ----------------------------------------------------------------------
 		createAuthenticationProvider(entityPackage);
-		
-		//----------------------------------------------------------------------
-		// Inject database based authentication provider into applicationContext-security.xml
-		//----------------------------------------------------------------------
+
+		// ----------------------------------------------------------------------
+		// Inject database based authentication provider into
+		// applicationContext-security.xml
+		// ----------------------------------------------------------------------
 		injectDatabasebasedAuthProviderInXml(entityPackage);
 	}
 
 	/**
-	 * Inject database based authentication provider into applicationContext-security.xml
+	 * Inject database based authentication provider into
+	 * applicationContext-security.xml
+	 * 
 	 * @param entityPackage
 	 */
-	private void injectDatabasebasedAuthProviderInXml(String entityPackage){
+	private void injectDatabasebasedAuthProviderInXml(String entityPackage) {
 		String springSecurity = pathResolver.getIdentifier(
 				Path.SRC_MAIN_RESOURCES,
 				"META-INF/spring/applicationContext-security.xml");
@@ -195,7 +212,6 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 				.getFullyQualifiedPackageName()
 				+ ".provider.DatabaseAuthenticationProvider";
 
-
 		Element databaseAuthenticationProviderBean = new XmlElementBuilder(
 				"beans:bean", webConfigDoc)
 				.addAttribute("id", "databaseAuthenticationProvider")
@@ -229,39 +245,55 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		XmlUtils.writeXml(mutableConfigXml.getOutputStream(), webConfigDoc);
 
 	}
-	
+
 	/**
-	 * Copy DatabaseAuthenticationProvider from template 
+	 * Copy DatabaseAuthenticationProvider from template
+	 * 
 	 * @param entityPackage
 	 */
 	private void createAuthenticationProvider(String entityPackage) {
+
 		JavaPackage topLevelPackage = getProjectMetadata().getTopLevelPackage();
 
 		String packagePath = topLevelPackage.getFullyQualifiedPackageName()
 				.replace('.', separator);
-		String destinationFile = pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
-				packagePath + separator + "provider" + separator
-						+ "DatabaseAuthenticationProvider.java");
+				
 		String finalEntityPackage = entityPackage.replace("~",
 				topLevelPackage.getFullyQualifiedPackageName());
 
-		try {
-			InputStream in = TemplateUtils.getTemplate(getClass(),
-					"DatabaseAuthenticationProvider.java-template");
-			InputStreamReader reader = new InputStreamReader(in);
-			String input = FileCopyUtils.copyToString(reader);
+		Properties properties = new Properties();
+		properties.put("__TOP_LEVEL_PACKAGE__",
+				topLevelPackage.getFullyQualifiedPackageName());
+		properties.put("__ENTITY_LEVEL_PACKAGE__", finalEntityPackage);
 
-			input = input.replaceAll("__TOP_LEVEL_PACKAGE__",
-					topLevelPackage.getFullyQualifiedPackageName());
-			input = input.replaceAll("__ENTITY_LEVEL_PACKAGE__",
-					finalEntityPackage);
+		
+		Map<String, String> map = new HashMap<String, String>();
 
-			MutableFile mutableFile = fileManager.createFile(destinationFile);
-			FileCopyUtils.copy(input.getBytes(), mutableFile.getOutputStream());
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
+				packagePath + separator + "provider" + separator
+				+ "DatabaseAuthenticationProvider.java"),
+				"DatabaseAuthenticationProvider.java-template");
 
-		} catch (IOException ioe) {
-			throw new IllegalStateException("Unable to create '"
-					+ destinationFile + "'", ioe);
+		for (Entry<String, String> entry : map.entrySet()) {
+
+			MutableFile mutableFile = null;
+
+			String path = entry.getKey();
+			String file = entry.getValue();
+			try {
+
+				if (fileManager.exists(path))
+					mutableFile = fileManager.updateFile(path);
+				else
+					mutableFile = fileManager.createFile(path);
+
+				TokenReplacementFileCopyUtils.replaceAndCopy(
+						TemplateUtils.getTemplate(getClass(), file),
+						mutableFile.getOutputStream(), properties);
+
+			} catch (IOException ioe) {
+				throw new IllegalStateException(ioe);
+			}
 		}
 
 	}
