@@ -34,7 +34,7 @@ public class TypicalsecurityCommands implements CommandMarker {
 	
 	
 	@CliCommand(value = "Typicalsecurity setup", help = "Setup Typicalsecurity addon")
-	public void setup(@CliOption(key = "entityPackage", mandatory = false, help = "entity package",specifiedDefaultValue="~.model",unspecifiedDefaultValue="~.model") String entityPackage,@CliOption(key = "controllerPackage", mandatory = false, help = "controller package",specifiedDefaultValue="~.web",unspecifiedDefaultValue="~.web") String controllerPackage) {
-		operations.setup( entityPackage,  controllerPackage);
+	public String setup(@CliOption(key = "entityPackage", mandatory = false, help = "entity package",specifiedDefaultValue="~.model",unspecifiedDefaultValue="~.model") String entityPackage,@CliOption(key = "controllerPackage", mandatory = false, help = "controller package",specifiedDefaultValue="~.web",unspecifiedDefaultValue="~.web") String controllerPackage) {
+		return operations.setup( entityPackage,  controllerPackage);
 	}
 }

@@ -10,5 +10,5 @@ public interface TypicalsecurityOperations {
 
 	boolean isCommandAvailable();
 	
-	void setup(String entityPackage,String controllerPackage);
+	String setup(String entityPackage,String controllerPackage);
 }
