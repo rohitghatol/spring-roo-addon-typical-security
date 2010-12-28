@@ -4,7 +4,7 @@
   <groupId>com.xsoftwarelabs.spring.roo.addon.typicalsecurity</groupId>
   <artifactId>com.xsoftwarelabs.spring.roo.addon.typicalsecurity</artifactId>
   <packaging>bundle</packaging>
-  <version>0.1.0.BUILD-SNAPSHOT</version>
+  <version>0.1</version>
   <name>TypicalSecurity</name>
   <organization>
     <name>XSoftwarelabs</name>
@@ -107,9 +107,9 @@
     </dependency>
   </dependencies>
   <scm>
-    <connection>scm:svn:https://${google.code.project.name}.googlecode.com/svn/trunk</connection>
-    <developerConnection>scm:svn:https://${google.code.project.name}.googlecode.com/svn/trunk</developerConnection>
-    <url>http://code.google.com/p/${google.code.project.name}/source/browse</url>
+    <connection>scm:svn:https://TypicalSecurity.googlecode.com/svn/tags/first_commit</connection>
+    <developerConnection>scm:svn:https://TypicalSecurity.googlecode.com/svn/tags/first_commit</developerConnection>
+    <url>http://code.google.com/p/TypicalSecurity/source/browse/tags/first_commit</url>
   </scm>
   <distributionManagement>
     <repository>
