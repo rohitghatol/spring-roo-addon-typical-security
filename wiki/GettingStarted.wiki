@@ -1,6 +1,27 @@
 #summary Getting Started
 #labels Featured,Phase-Implementation
 
+= Getting Started - Start with example roo script =
+Create a setup.roo file using following contents
+{{{
+//Install the Typical Security Addonosgi start --url http://spring-roo-addon-typical-security.googlecode.com/svn-history/r129/repo/com/xsoftwarelabs/spring/roo/addon/typicalsecurity/com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.2.BUILD/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.2.BUILD.jar
+
+//Create a Sample Project to see the behavior
+project --topLevelPackage com.testproject2 --projectName TestProject2
+
+//Typical Security Addon needs persistence, other wise it doesn't show itself
+persistence setup --provider HIBERNATE --database HYPERSONIC_IN_MEMORY
+
+//Run the TypicalSecurity setup addon in default mode
+Typicalsecurity setup
+
+//Run tomcat to see the effects
+mvn tomcat:run
+}}}
+
+= Tutorial =
+See the Youtube video for the same here - TBD
+
 = Installation =
 
 Run following code on Roo Shell
