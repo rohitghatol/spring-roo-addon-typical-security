@@ -32,7 +32,9 @@ mvn tomcat:run
 }}}
 
 = Tutorial =
-See the Youtube video for the same here - TBD
+
+<wiki:video url="http://www.youtube.com/watch?v=Y-kuYj8vsYU"/>
+
 
 = Installation =
 
