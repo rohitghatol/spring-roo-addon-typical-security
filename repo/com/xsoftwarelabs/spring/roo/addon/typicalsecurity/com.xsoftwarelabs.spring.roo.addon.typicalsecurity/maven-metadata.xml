@@ -4,11 +4,12 @@
   <artifactId>com.xsoftwarelabs.spring.roo.addon.typicalsecurity</artifactId>
   <version>0.1.0.BUILD</version>
   <versioning>
-    <release>0.1.1.BUILD</release>
+    <release>0.1.2.BUILD</release>
     <versions>
       <version>0.1.0.BUILD</version>
       <version>0.1.1.BUILD</version>
+      <version>0.1.2.BUILD</version>
     </versions>
-    <lastUpdated>20101228173802</lastUpdated>
+    <lastUpdated>20110103093858</lastUpdated>
   </versioning>
 </metadata>
