@@ -2,8 +2,6 @@ package com.xsoftwarelabs.spring.roo.addon.typicalsecurity;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -23,7 +21,6 @@ import org.springframework.roo.project.PathResolver;
 import org.springframework.roo.project.ProjectMetadata;
 import org.springframework.roo.shell.Shell;
 import org.springframework.roo.support.util.Assert;
-import org.springframework.roo.support.util.FileCopyUtils;
 import org.springframework.roo.support.util.TemplateUtils;
 import org.springframework.roo.support.util.XmlElementBuilder;
 import org.springframework.roo.support.util.XmlUtils;
@@ -64,7 +61,7 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 
 		createUserRoleEntities(entityPackage);
 		createControllers(entityPackage, controllerPackage);
-		injectDatabasebasedSecurity(entityPackage);
+		injectDatabasebasedSecurity(entityPackage,controllerPackage);
 
 		return "Done";
 	}
@@ -150,7 +147,7 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 	 * 
 	 * @param entityPackage
 	 */
-	private void injectDatabasebasedSecurity(String entityPackage) {
+	private void injectDatabasebasedSecurity(String entityPackage,String controllerPackage) {
 
 		// ----------------------------------------------------------------------
 		// Run Security Setup Addon
@@ -160,15 +157,24 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		// ----------------------------------------------------------------------
 		// Copy DatabaseAuthenticationProvider from template
 		// ----------------------------------------------------------------------
-		createAuthenticationProvider(entityPackage);
+		createAuthenticationProvider(entityPackage,controllerPackage);
 
 		// ----------------------------------------------------------------------
 		// Inject database based authentication provider into
 		// applicationContext-security.xml
 		// ----------------------------------------------------------------------
 		injectDatabasebasedAuthProviderInXml(entityPackage);
+		
+		createMailSender();
+		addForgotPasswordRegisterUserToLoginPage();
 	}
+	
 
+	private void createMailSender(){
+		shell.executeCommand("email sender setup --hostServer smtp.gmail.com --port 587 --protocol SMTP --username rohitsghatoltest@gmail.com --password password4me");
+		shell.executeCommand("email template setup --from rohitsghatoltest@gmail.com --subject Password Recovery");
+
+	}
 	/**
 	 * Inject database based authentication provider into
 	 * applicationContext-security.xml
@@ -251,28 +257,49 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 	 * 
 	 * @param entityPackage
 	 */
-	private void createAuthenticationProvider(String entityPackage) {
+	private void createAuthenticationProvider(String entityPackage,String controllerPackage) {
 
 		JavaPackage topLevelPackage = getProjectMetadata().getTopLevelPackage();
 
 		String packagePath = topLevelPackage.getFullyQualifiedPackageName()
 				.replace('.', separator);
-				
+
 		String finalEntityPackage = entityPackage.replace("~",
+				topLevelPackage.getFullyQualifiedPackageName());
+		
+		String finalControllerPackage = controllerPackage.replace("~",
 				topLevelPackage.getFullyQualifiedPackageName());
 
 		Properties properties = new Properties();
 		properties.put("__TOP_LEVEL_PACKAGE__",
 				topLevelPackage.getFullyQualifiedPackageName());
 		properties.put("__ENTITY_LEVEL_PACKAGE__", finalEntityPackage);
+		properties.put("__CONTROLLER_PACKAGE__", finalControllerPackage);
 
-		
 		Map<String, String> map = new HashMap<String, String>();
 
-		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
-				packagePath + separator + "provider" + separator
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA, finalControllerPackage.replace('.', separator) + separator
+				+ "ForgotPasswordController.java"),
+				"ForgotPasswordController.java-template");
+		
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA, finalControllerPackage.replace('.', separator) + separator
+				+ "ForgotPasswordForm.java"),
+				"ForgotPasswordForm.java-template");
+		
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA, packagePath
+				+ separator + "provider" + separator
 				+ "DatabaseAuthenticationProvider.java"),
 				"DatabaseAuthenticationProvider.java-template");
+
+		
+		String prefix=separator+"WEB-INF/views";
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix+separator+"forgotpassword"+separator+"index.jspx"),
+				"forgotpassword/index.jspx");
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix+separator+"forgotpassword"+separator+"thanks.jspx"),
+		"forgotpassword/thanks.jspx");
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix+separator+"forgotpassword"+separator+"views.xml"),
+		"forgotpassword/views.xml");
+		
 
 		for (Entry<String, String> entry : map.entrySet()) {
 
@@ -295,6 +322,52 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 				throw new IllegalStateException(ioe);
 			}
 		}
+
+	}
+
+	private void addForgotPasswordRegisterUserToLoginPage() {
+		// <div>
+		// <a href ="/TypicalSecurity/forgotpassword/index">Forgot Password</a>
+		// | Not a User Yet? <a href ="/TypicalSecurity/signin?form">Sign In</a>
+		// </div>
+
+		String loginJspx = pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP,
+				"WEB-INF/views/login.jspx");
+
+
+		MutableFile mutableLoginJspx = null;
+		Document loginJspxDoc;
+		try {
+			if (fileManager.exists(loginJspx)) {
+				mutableLoginJspx = fileManager.updateFile(loginJspx);
+				loginJspxDoc = XmlUtils.getDocumentBuilder().parse(
+						mutableLoginJspx.getInputStream());
+				Element form = XmlUtils.findFirstElementByName("form",
+						loginJspxDoc.getDocumentElement());
+				Assert.notNull(form, "Could not find form in " + loginJspx);
+
+				String contextPath = getProjectMetadata().getProjectName();
+				form.appendChild(new XmlElementBuilder("div", loginJspxDoc)
+						.addChild(
+								loginJspxDoc
+										.createTextNode("<br/><a href =\"/"
+												+ contextPath
+												+ "/forgotpassword/index\">Forgot Password</a> | Not a User Yet? <a href =\"/"
+												+ contextPath
+												+ "/signin?form\">Sign Up</a>"))
+						.build());
+				XmlUtils.writeXml(mutableLoginJspx.getOutputStream(), loginJspxDoc);
+				
+			} else {
+				throw new IllegalStateException("Could not acquire "
+						+ loginJspx);
+			}
+		} catch (Exception e) {
+			System.out.println("---> "+e.getMessage());
+			throw new IllegalStateException(e);
+		}
+
+		
 
 	}
 
