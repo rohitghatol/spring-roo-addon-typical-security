@@ -5,11 +5,12 @@
   <jsp:output omit-xml-declaration="yes"/>
   <script type="text/javascript">dojo.require('dijit.TitlePane');dojo.require('dijit.form.SimpleTextarea');dojo.require('dijit.form.FilteringSelect');</script>
   <div id="_title_div">
-
-    <script type="text/javascript">Spring.addDecoration(new Spring.ElementDecoration({elementId : '_title_div', widgetType : 'dijit.TitlePane', widgetAttrs : {title: 'User Registration'}})); </script>
+    
+    <script type="text/javascript">Spring.addDecoration(new Spring.ElementDecoration({elementId : '_title_div', widgetType : 'dijit.TitlePane', widgetAttrs : {title: 'Sign Up'}})); </script>
     <spring:url value="/signup" var="form_url"/>
-    <script type="text/javascript">Spring.addDecoration(new Spring.ElementDecoration({elementId : '_title_div', widgetType : 'dijit.TitlePane', widgetAttrs : {title: 'User Registration'}})); </script>
-
-    <h3>Thank you for registering, you will receive an activation email from us soon</h3>
+    
+    <script type="text/javascript">Spring.addDecoration(new Spring.ElementDecoration({elementId : '_title_div', widgetType : 'dijit.TitlePane', widgetAttrs : {title: 'Sign Up'}})); </script>
+    
+    <h3>User Registration Failed</h3>
   </div>
 </div>

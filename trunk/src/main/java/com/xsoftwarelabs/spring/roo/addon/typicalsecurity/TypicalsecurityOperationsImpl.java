@@ -1,7 +1,15 @@
 package com.xsoftwarelabs.spring.roo.addon.typicalsecurity;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,9 +24,11 @@ import org.springframework.roo.metadata.MetadataService;
 import org.springframework.roo.model.JavaPackage;
 import org.springframework.roo.process.manager.FileManager;
 import org.springframework.roo.process.manager.MutableFile;
+import org.springframework.roo.project.Dependency;
 import org.springframework.roo.project.Path;
 import org.springframework.roo.project.PathResolver;
 import org.springframework.roo.project.ProjectMetadata;
+import org.springframework.roo.project.ProjectOperations;
 import org.springframework.roo.shell.Shell;
 import org.springframework.roo.support.util.Assert;
 import org.springframework.roo.support.util.TemplateUtils;
@@ -42,9 +52,11 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 	@Reference
 	private MetadataService metadataService;
 	@Reference
-	FileManager fileManager;
+	private FileManager fileManager;
 	@Reference
-	PathResolver pathResolver;
+	private PathResolver pathResolver;
+	@Reference
+	private ProjectOperations projectOperations;
 	@Reference
 	private Shell shell;
 	@Reference
@@ -59,11 +71,23 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 
 	public String setup(String entityPackage, String controllerPackage) {
 
+		injectCaptchaDependency();
 		createUserRoleEntities(entityPackage);
 		createControllers(entityPackage, controllerPackage);
-		injectDatabasebasedSecurity(entityPackage,controllerPackage);
+		injectDatabasebasedSecurity(entityPackage, controllerPackage);
 
 		return "Done";
+	}
+
+	private void injectCaptchaDependency() {
+		// <dependency>
+		// <groupId>net.tanesha.recaptcha4j</groupId>
+		// <artifactId>recaptcha4j</artifactId>
+		// <version>0.0.7</version>
+		// </dependency>
+		projectOperations.addDependency(new Dependency(
+				"net.tanesha.recaptcha4j", "recaptcha4j", "0.0.7"));
+
 	}
 
 	/**
@@ -82,6 +106,10 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		shell.executeCommand("field string --fieldName lastName --sizeMin 1 --notNull");
 		shell.executeCommand("field string --fieldName emailAddress --sizeMin 1 --notNull --unique");
 		shell.executeCommand("field string --fieldName password --sizeMin 1 --notNull");
+		shell.executeCommand("field date --fieldName activationDate --type java.util.Date --sizeMin 1 ");
+		shell.executeCommand("field string --fieldName activationKey ");
+		shell.executeCommand("field boolean --fieldName enabled ");
+		shell.executeCommand("field boolean --fieldName locked ");
 
 		// -----------------------------------------------------------------------------------
 		// Create Role entity
@@ -106,6 +134,7 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		// user
 		// -----------------------------------------------------------------------------------
 		shell.executeCommand("finder add findUserModelsByEmailAddress --class ~.model.UserModel");
+		shell.executeCommand("finder add findUserModelsByActivationKeyAndEmailAddress --class ~.model.UserModel");
 		shell.executeCommand("finder add findUserRoleModelsByUserEntry --class ~.model.UserRoleModel");
 
 	}
@@ -147,7 +176,8 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 	 * 
 	 * @param entityPackage
 	 */
-	private void injectDatabasebasedSecurity(String entityPackage,String controllerPackage) {
+	private void injectDatabasebasedSecurity(String entityPackage,
+			String controllerPackage) {
 
 		// ----------------------------------------------------------------------
 		// Run Security Setup Addon
@@ -157,24 +187,25 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		// ----------------------------------------------------------------------
 		// Copy DatabaseAuthenticationProvider from template
 		// ----------------------------------------------------------------------
-		createAuthenticationProvider(entityPackage,controllerPackage);
+		createAuthenticationProvider(entityPackage, controllerPackage);
 
 		// ----------------------------------------------------------------------
 		// Inject database based authentication provider into
 		// applicationContext-security.xml
 		// ----------------------------------------------------------------------
 		injectDatabasebasedAuthProviderInXml(entityPackage);
-		
+
 		createMailSender();
 		addForgotPasswordRegisterUserToLoginPage();
+		addChangePasswordToFooter();
 	}
-	
 
-	private void createMailSender(){
+	private void createMailSender() {
 		shell.executeCommand("email sender setup --hostServer smtp.gmail.com --port 587 --protocol SMTP --username rohitsghatoltest@gmail.com --password password4me");
 		shell.executeCommand("email template setup --from rohitsghatoltest@gmail.com --subject Password Recovery");
 
 	}
+
 	/**
 	 * Inject database based authentication provider into
 	 * applicationContext-security.xml
@@ -257,7 +288,8 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 	 * 
 	 * @param entityPackage
 	 */
-	private void createAuthenticationProvider(String entityPackage,String controllerPackage) {
+	private void createAuthenticationProvider(String entityPackage,
+			String controllerPackage) {
 
 		JavaPackage topLevelPackage = getProjectMetadata().getTopLevelPackage();
 
@@ -266,7 +298,7 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 
 		String finalEntityPackage = entityPackage.replace("~",
 				topLevelPackage.getFullyQualifiedPackageName());
-		
+
 		String finalControllerPackage = controllerPackage.replace("~",
 				topLevelPackage.getFullyQualifiedPackageName());
 
@@ -278,28 +310,85 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 
 		Map<String, String> map = new HashMap<String, String>();
 
-		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA, finalControllerPackage.replace('.', separator) + separator
-				+ "ForgotPasswordController.java"),
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
+				finalControllerPackage.replace('.', separator) + separator
+						+ "ChangePasswordController.java"),
+				"ChangePasswordController.java-template");
+
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
+				finalControllerPackage.replace('.', separator) + separator
+						+ "ChangePasswordForm.java"),
+				"ChangePasswordForm.java-template");
+
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
+				finalControllerPackage.replace('.', separator) + separator
+						+ "ChangePasswordValidator.java"),
+				"ChangePasswordValidator.java-template");
+
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
+				finalControllerPackage.replace('.', separator) + separator
+						+ "SignUpController.java"),
+				"SignUpController.java-template");
+
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
+				finalControllerPackage.replace('.', separator) + separator
+						+ "UserRegistrationForm.java"),
+				"UserRegistrationForm.java-template");
+
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
+				finalControllerPackage.replace('.', separator) + separator
+						+ "SignUpValidator.java"),
+				"SignUpValidator.java-template");
+
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
+				finalControllerPackage.replace('.', separator) + separator
+						+ "ForgotPasswordController.java"),
 				"ForgotPasswordController.java-template");
-		
-		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA, finalControllerPackage.replace('.', separator) + separator
-				+ "ForgotPasswordForm.java"),
+
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
+				finalControllerPackage.replace('.', separator) + separator
+						+ "ForgotPasswordForm.java"),
 				"ForgotPasswordForm.java-template");
-		
+
 		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA, packagePath
 				+ separator + "provider" + separator
 				+ "DatabaseAuthenticationProvider.java"),
 				"DatabaseAuthenticationProvider.java-template");
 
-		
-		String prefix=separator+"WEB-INF/views";
-		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix+separator+"forgotpassword"+separator+"index.jspx"),
+		String prefix = separator + "WEB-INF/views";
+
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix
+				+ separator + "signup" + separator + "index.jspx"),
+				"signup/index.jspx");
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix
+				+ separator + "signup" + separator + "thanks.jspx"),
+				"signup/thanks.jspx");
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix
+				+ separator + "signup" + separator + "error.jspx"),
+				"signup/error.jspx");
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix
+				+ separator + "signup" + separator + "views.xml"),
+				"signup/views.xml");
+
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix
+				+ separator + "forgotpassword" + separator + "index.jspx"),
 				"forgotpassword/index.jspx");
-		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix+separator+"forgotpassword"+separator+"thanks.jspx"),
-		"forgotpassword/thanks.jspx");
-		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix+separator+"forgotpassword"+separator+"views.xml"),
-		"forgotpassword/views.xml");
-		
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix
+				+ separator + "forgotpassword" + separator + "thanks.jspx"),
+				"forgotpassword/thanks.jspx");
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix
+				+ separator + "forgotpassword" + separator + "views.xml"),
+				"forgotpassword/views.xml");
+
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix
+				+ separator + "changepassword" + separator + "index.jspx"),
+				"changepassword/index.jspx");
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix
+				+ separator + "changepassword" + separator + "thanks.jspx"),
+				"changepassword/thanks.jspx");
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP, prefix
+				+ separator + "changepassword" + separator + "views.xml"),
+				"changepassword/views.xml");
 
 		for (Entry<String, String> entry : map.entrySet()) {
 
@@ -317,6 +406,8 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 				TokenReplacementFileCopyUtils.replaceAndCopy(
 						TemplateUtils.getTemplate(getClass(), file),
 						mutableFile.getOutputStream(), properties);
+				
+				insertI18nMessages();
 
 			} catch (IOException ioe) {
 				throw new IllegalStateException(ioe);
@@ -325,15 +416,67 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 
 	}
 
+	private void addChangePasswordToFooter() {
+		// Look for following in footer.jspx
+		// <a href="${logout}">
+		// <spring:message code="security_logout"/>
+		// </a>
+		// and append
+		// <a href="changePassword/index">Change Password</a>
+
+		String footerJspx = pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP,
+				"WEB-INF/views/footer.jspx");
+
+		MutableFile mutableFooterJspx = null;
+		Document footerJspxDoc;
+		try {
+			if (fileManager.exists(footerJspx)) {
+				mutableFooterJspx = fileManager.updateFile(footerJspx);
+				footerJspxDoc = XmlUtils.getDocumentBuilder().parse(
+						mutableFooterJspx.getInputStream());
+				Element logout = XmlUtils.findFirstElement(
+						"//a[@href=\"${logout}\"]",
+						footerJspxDoc.getDocumentElement());
+				Assert.notNull(logout,
+						"Could not find <a href=\"${logout}\"> in "
+								+ footerJspx);
+
+				logout.getParentNode().appendChild(
+						new XmlElementBuilder("div", footerJspxDoc).addChild(
+								footerJspxDoc.createTextNode("|")).build());
+				String contextPath = getProjectMetadata().getProjectName();
+				logout.getParentNode().appendChild(
+						new XmlElementBuilder("a", footerJspxDoc)
+								.addAttribute(
+										"href",
+										"/" + contextPath
+												+ "/changepassword/index")
+								.addChild(
+										footerJspxDoc
+												.createTextNode("password"))
+								.build());
+				XmlUtils.writeXml(mutableFooterJspx.getOutputStream(),
+						footerJspxDoc);
+
+			} else {
+				throw new IllegalStateException("Could not acquire "
+						+ footerJspx);
+			}
+		} catch (Exception e) {
+			System.out.println("---> " + e.getMessage());
+			throw new IllegalStateException(e);
+		}
+
+	}
+
 	private void addForgotPasswordRegisterUserToLoginPage() {
 		// <div>
 		// <a href ="/TypicalSecurity/forgotpassword/index">Forgot Password</a>
-		// | Not a User Yet? <a href ="/TypicalSecurity/signin?form">Sign In</a>
+		// | Not a User Yet? <a href ="/TypicalSecurity/signup?form">Sign In</a>
 		// </div>
 
 		String loginJspx = pathResolver.getIdentifier(Path.SRC_MAIN_WEBAPP,
 				"WEB-INF/views/login.jspx");
-
 
 		MutableFile mutableLoginJspx = null;
 		Document loginJspxDoc;
@@ -354,21 +497,94 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 												+ contextPath
 												+ "/forgotpassword/index\">Forgot Password</a> | Not a User Yet? <a href =\"/"
 												+ contextPath
-												+ "/signin?form\">Sign Up</a>"))
+												+ "/signup?form\">Sign Up</a>"))
 						.build());
-				XmlUtils.writeXml(mutableLoginJspx.getOutputStream(), loginJspxDoc);
-				
+				XmlUtils.writeXml(mutableLoginJspx.getOutputStream(),
+						loginJspxDoc);
+
 			} else {
 				throw new IllegalStateException("Could not acquire "
 						+ loginJspx);
 			}
 		} catch (Exception e) {
-			System.out.println("---> "+e.getMessage());
+			System.out.println("---> " + e.getMessage());
 			throw new IllegalStateException(e);
 		}
 
-		
+	}
 
+	private void insertI18nMessages() {
+		String applicationProperties = pathResolver.getIdentifier(
+				Path.SRC_MAIN_WEBAPP, "WEB-INF/i18n/application.properties");
+
+		MutableFile mutableApplicationProperties = null;
+
+		try {
+			if (fileManager.exists(applicationProperties)) {
+				mutableApplicationProperties = fileManager
+						.updateFile(applicationProperties);
+				String originalData = convertStreamToString(mutableApplicationProperties
+						.getInputStream());
+
+				BufferedWriter out = new BufferedWriter(new OutputStreamWriter(
+						mutableApplicationProperties.getOutputStream()));
+
+				out.write(originalData);
+				out.write("label_com_training_spring_roo_model_usermodel_id=Id\n");
+				out.write("label_com_training_spring_roo_model_usermodel_lastname=Last Name\n");
+				out.write("label_com_training_spring_roo_model_usermodel_failedloginattempts=Failed\n");
+				out.write("label_com_training_spring_roo_model_usermodel_password=Password\n");
+				out.write("label_com_training_spring_roo_model_userstatusmodel_failedloginattempts=Failed Login Attempts\n");
+				out.write("label_com_training_spring_roo_model_usermodel_repeat_password=Repeat Password\n");
+				out.write("label_com_training_spring_roo_model_usermodel_version=Version\n");
+				out.write("label_com_training_spring_roo_model_usermodel_firstname=First Name\n");
+				out.write("label_com_training_spring_roo_model_usermodel_plural=User Models\n");
+				out.write("label_com_training_spring_roo_model_usermodel=User Model\n");
+				out.write("label_com_training_spring_roo_model_usermodel_enabled=Enabled\n");
+				out.write("label_com_training_spring_roo_model_usermodel_repeatpassword=Repeat Password\n");
+				out.write("label_com_training_spring_roo_model_usermodel_locked=Locked\n");
+				out.write("label_com_training_spring_roo_model_usermodel_activationkey=Activation Key\n");
+				out.write("label_com_training_spring_roo_model_usermodel_emailaddress=Email Address\n");
+				out.write("label_com_training_spring_roo_model_usermodel_activationdate=Activation Date\n");
+
+				out.close();
+
+			} else {
+				throw new IllegalStateException("Could not acquire "
+						+ applicationProperties);
+			}
+		} catch (Exception e) {
+			System.out.println("---> " + e.getMessage());
+			throw new IllegalStateException(e);
+		}
+
+	}
+
+	private String convertStreamToString(InputStream is) throws IOException {
+		/*
+		 * To convert the InputStream to String we use the Reader.read(char[]
+		 * buffer) method. We iterate until the Reader return -1 which means
+		 * there's no more data to read. We use the StringWriter class to
+		 * produce the string.
+		 */
+		if (is != null) {
+			Writer writer = new StringWriter();
+
+			char[] buffer = new char[1024];
+			try {
+				Reader reader = new BufferedReader(new InputStreamReader(is,
+						"UTF-8"));
+				int n;
+				while ((n = reader.read(buffer)) != -1) {
+					writer.write(buffer, 0, n);
+				}
+			} finally {
+				is.close();
+			}
+			return writer.toString();
+		} else {
+			return "";
+		}
 	}
 
 	/**

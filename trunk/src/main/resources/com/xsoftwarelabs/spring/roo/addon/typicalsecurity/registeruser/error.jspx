@@ -5,12 +5,12 @@
   <jsp:output omit-xml-declaration="yes"/>
   <script type="text/javascript">dojo.require('dijit.TitlePane');dojo.require('dijit.form.SimpleTextarea');dojo.require('dijit.form.FilteringSelect');</script>
   <div id="_title_div">
-    <spring:message code="label.userregistration" var="title_msg"/>
-    <script type="text/javascript">Spring.addDecoration(new Spring.ElementDecoration({elementId : '_title_div', widgetType : 'dijit.TitlePane', widgetAttrs : {title: '${title_msg}'}})); </script>
-    <spring:url value="/signin" var="form_url"/>
-    <spring:message var="title" code="label.userregistration"/>
-    <script type="text/javascript">Spring.addDecoration(new Spring.ElementDecoration({elementId : '_title_div', widgetType : 'dijit.TitlePane', widgetAttrs : {title: '${title_msg}'}})); </script>
-    <spring:message code="userregistration.errorMessage" var="error_message"/>
-    <h3>${error_message}</h3>
+    
+    <script type="text/javascript">Spring.addDecoration(new Spring.ElementDecoration({elementId : '_title_div', widgetType : 'dijit.TitlePane', widgetAttrs : {title: 'User Registration'}})); </script>
+    <spring:url value="/signup" var="form_url"/>
+    
+    <script type="text/javascript">Spring.addDecoration(new Spring.ElementDecoration({elementId : '_title_div', widgetType : 'dijit.TitlePane', widgetAttrs : {title: 'User Registration'}})); </script>
+    
+    <h3>Error encountered in User Registration Process</h3>
   </div>
 </div>
