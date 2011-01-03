@@ -1,0 +1,118 @@
+package __CONTROLLER_PACKAGE__;
+
+import java.util.Date;
+import java.util.Random;
+
+import javax.persistence.TypedQuery;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
+import net.tanesha.recaptcha.ReCaptcha;
+import net.tanesha.recaptcha.ReCaptchaFactory;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import __ENTITY_LEVEL_PACKAGE__.UserModel;
+
+@RequestMapping("/signup/**")
+@Controller
+public class SignUpController {
+
+    @Autowired
+    private SignUpValidator validator;
+
+    @Autowired
+    private transient MailSender mailSender;
+
+    @Autowired
+    private transient SimpleMailMessage simpleMailMessage;
+
+    @ModelAttribute("usermodel")
+    public UserRegistrationForm formBackingObject() {
+        return new UserRegistrationForm();
+    }
+
+    @RequestMapping(params = "form", method = RequestMethod.GET)
+    public String createForm(Model model) {
+    	UserRegistrationForm form = new UserRegistrationForm();
+        model.addAttribute("userModel", form);
+        model.addAttribute("captcha_form",form.getReCaptchaHtml());
+        return "signup/index";
+    }
+    
+    @RequestMapping(params = "activate", method = RequestMethod.GET)
+    public String activateUser(@RequestParam(value = "activate", required = true) String activationKey,@RequestParam(value = "emailAddress", required = true) String emailAddress,Model model) {
+        TypedQuery<UserModel> query = UserModel.findUserModelsByActivationKeyAndEmailAddress(activationKey, emailAddress);
+        UserModel userModel=query.getSingleResult();
+        if(null!=userModel){
+        	userModel.setActivationDate(new Date());
+        	userModel.setEnabled(true);
+        	userModel.merge();
+        	return "login";
+        }
+        else{
+        	return "signup/error";
+        }
+
+    }
+
+    @RequestMapping(method = RequestMethod.POST)
+    public String create(@Valid UserRegistrationForm userRegistration, BindingResult result, Model model, HttpServletRequest request) {
+        validator.validate(userRegistration, result);
+        if (result.hasErrors()) {
+        	
+            return createForm(model);
+        } else {
+            Random random = new Random(System.currentTimeMillis());
+            String activationKey = "activationKey:" + random.nextInt();
+
+            UserModel userModel = new UserModel();
+            userModel.setActivationDate(null);
+            userModel.setEmailAddress(userRegistration.getEmailAddress());
+            userModel.setFirstName(userRegistration.getFirstName());
+            userModel.setLastName(userRegistration.getLastName());
+            userModel.setPassword(userRegistration.getPassword());
+            userModel.setActivationKey(activationKey);
+            userModel.setEnabled(false);
+            userModel.setLocked(false);
+            userModel.persist();
+            
+            SimpleMailMessage mail = new SimpleMailMessage();
+    		mail.setTo(userModel.getEmailAddress());
+    		mail.setSubject("User Activaton");
+    		
+    		mail.setText("Hi "+userModel.getFirstName()+",\n. You had registered with us. Please click on this link to activate your account - <a href=\"http://__BASE_URL__/signup?emailAddress="+userModel.getEmailAddress()+"&activate="+activationKey+"\">Activate Link</a>. \n Thanks Tyical Security Admin");
+            mailSender.send(mail);
+            return "signup/thanks";
+        }
+    }
+
+    @RequestMapping
+    public String index() {
+        return "signup/index";
+    }
+
+    @RequestMapping
+    public String thanks() {
+        return "signup/thanks";
+    }
+    @RequestMapping
+    public String error() {
+        return "signup/error";
+    }
+
+    public void sendMessage(String mailTo, String message) {
+        simpleMailMessage.setTo(mailTo);
+        simpleMailMessage.setText(message);
+        mailSender.send(simpleMailMessage);
+    }
+}

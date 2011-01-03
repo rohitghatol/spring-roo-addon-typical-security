@@ -10,7 +10,7 @@
     <spring:url value="/changepassword" var="form_url"/>
     Change Password
     <script type="text/javascript">Spring.addDecoration(new Spring.ElementDecoration({elementId : '_title_div', widgetType : 'dijit.TitlePane', widgetAttrs : {title: '${title_msg}'}})); </script>
-    <spring:message code="changepassword.thankyoumessage" var="thankyou_message"/>
+    
     <h3>You password has been successfully been changed.</h3>
   </div>
 </div>
