@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
-<repository lastmodified="20101228230949.619" name="MyRepository">
+<repository lastmodified="20110103151026.687" name="MyRepository">
 <resource id="com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.0.BUILD" presentationname="spring-roo-addon-typical-security" symbolicname="com.xsoftwarelabs.spring.roo.addon.typicalsecurity" uri="httppgp://spring-roo-addon-typical-security.googlecode.com/svn/repo/com/xsoftwarelabs/spring/roo/addon/typicalsecurity/com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.0.BUILD/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.0.BUILD.jar" version="0.1.0.BUILD">
 <description>An add-on created by Spring Roo's addon creator feature.</description>
 <size>16284</size>
@@ -53,6 +53,42 @@
 <p n="version" t="version" v="0.0.0"/>
 </capability>
 <require extend="false" filter="(&amp;(package=com.xsoftwarelabs.spring.roo.addon.typicalsecurity)(version&gt;=0.0.0))" multiple="false" name="package" optional="false">Import package com.xsoftwarelabs.spring.roo.addon.typicalsecurity</require>
+<require extend="false" filter="(&amp;(package=javax.xml.parsers)(version&gt;=0.0.0))" multiple="false" name="package" optional="false">Import package javax.xml.parsers</require>
+<require extend="false" filter="(&amp;(package=org.springframework.roo.classpath.operations)(version&gt;=1.1.0))" multiple="false" name="package" optional="false">Import package org.springframework.roo.classpath.operations ;version=1.1.0</require>
+<require extend="false" filter="(&amp;(package=org.springframework.roo.metadata)(version&gt;=1.1.0))" multiple="false" name="package" optional="false">Import package org.springframework.roo.metadata ;version=1.1.0</require>
+<require extend="false" filter="(&amp;(package=org.springframework.roo.model)(version&gt;=1.1.0))" multiple="false" name="package" optional="false">Import package org.springframework.roo.model ;version=1.1.0</require>
+<require extend="false" filter="(&amp;(package=org.springframework.roo.process.manager)(version&gt;=1.1.0))" multiple="false" name="package" optional="false">Import package org.springframework.roo.process.manager ;version=1.1.0</require>
+<require extend="false" filter="(&amp;(package=org.springframework.roo.project)(version&gt;=1.1.0))" multiple="false" name="package" optional="false">Import package org.springframework.roo.project ;version=1.1.0</require>
+<require extend="false" filter="(&amp;(package=org.springframework.roo.shell)(version&gt;=1.1.0))" multiple="false" name="package" optional="false">Import package org.springframework.roo.shell ;version=1.1.0</require>
+<require extend="false" filter="(&amp;(package=org.springframework.roo.support.util)(version&gt;=1.1.0))" multiple="false" name="package" optional="false">Import package org.springframework.roo.support.util ;version=1.1.0</require>
+<require extend="false" filter="(&amp;(package=org.w3c.dom)(version&gt;=0.0.0))" multiple="false" name="package" optional="false">Import package org.w3c.dom</require>
+</resource>
+<resource id="com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.2.BUILD" presentationname="spring-roo-addon-typical-security" symbolicname="com.xsoftwarelabs.spring.roo.addon.typicalsecurity" uri="httppgp://spring-roo-addon-typical-security.googlecode.com/svn/repo/com/xsoftwarelabs/spring/roo/addon/typicalsecurity/com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.2.BUILD/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.2.BUILD.jar" version="0.1.2.BUILD">
+<description>An add-on created by Spring Roo's addon creator feature.</description>
+<size>38298</size>
+<documentation>http://www.xsoftwarelabs.com</documentation>
+<source>com/xsoftwarelabs/spring/roo/addon/typicalsecurity/com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.2.BUILD/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.2.BUILD-sources.jar.asc</source>
+<javadoc>com/xsoftwarelabs/spring/roo/addon/typicalsecurity/com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.2.BUILD/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.2.BUILD-javadoc.jar.asc</javadoc>
+<license>http://www.gnu.org/copyleft/gpl.html</license>
+<category id="com.xsoftwarelabs.spring.roo.addon.typicalsecurity"/>
+<capability name="bundle">
+<p n="manifestversion" v="2"/>
+<p n="presentationname" v="spring-roo-addon-typical-security"/>
+<p n="symbolicname" v="com.xsoftwarelabs.spring.roo.addon.typicalsecurity"/>
+<p n="version" t="version" v="0.1.2.BUILD"/>
+</capability>
+<capability name="package">
+<p n="package" v="com.xsoftwarelabs.spring.roo.addon.typicalsecurity"/>
+<p n="uses" v="org.springframework.roo.shell,org.springframework.roo.model,org.springframework.roo.classpath.operations,org.springframework.roo.project,org.springframework.roo.metadata,javax.xml.parsers,org.w3c.dom,org.springframework.roo.support.util,org.springframework.roo.process.manager,com.xsoftwarelabs.spring.roo.addon.typicalsecurity.utils"/>
+<p n="version" t="version" v="0.0.0"/>
+</capability>
+<capability name="package">
+<p n="package" v="com.xsoftwarelabs.spring.roo.addon.typicalsecurity.utils"/>
+<p n="uses" v="org.springframework.roo.support.util"/>
+<p n="version" t="version" v="0.0.0"/>
+</capability>
+<require extend="false" filter="(&amp;(package=com.xsoftwarelabs.spring.roo.addon.typicalsecurity)(version&gt;=0.0.0))" multiple="false" name="package" optional="false">Import package com.xsoftwarelabs.spring.roo.addon.typicalsecurity</require>
+<require extend="false" filter="(&amp;(package=com.xsoftwarelabs.spring.roo.addon.typicalsecurity.utils)(version&gt;=0.0.0))" multiple="false" name="package" optional="false">Import package com.xsoftwarelabs.spring.roo.addon.typicalsecurity.utils</require>
 <require extend="false" filter="(&amp;(package=javax.xml.parsers)(version&gt;=0.0.0))" multiple="false" name="package" optional="false">Import package javax.xml.parsers</require>
 <require extend="false" filter="(&amp;(package=org.springframework.roo.classpath.operations)(version&gt;=1.1.0))" multiple="false" name="package" optional="false">Import package org.springframework.roo.classpath.operations ;version=1.1.0</require>
 <require extend="false" filter="(&amp;(package=org.springframework.roo.metadata)(version&gt;=1.1.0))" multiple="false" name="package" optional="false">Import package org.springframework.roo.metadata ;version=1.1.0</require>
