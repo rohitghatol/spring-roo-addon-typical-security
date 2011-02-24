@@ -26,15 +26,15 @@ public class TypicalsecurityCommands implements CommandMarker {
 	private static Logger logger = Logger.getLogger(TypicalsecurityCommands.class.getName());
 	@Reference private TypicalsecurityOperations operations;
 	
-	@CliAvailabilityIndicator({"Typicalsecurity setup", "Typicalsecurity add"})
+	@CliAvailabilityIndicator({"typicalsecurity setup", "typicalsecurity add"})
 	public boolean isPropertyAvailable() {
 		return operations.isCommandAvailable();
 	}
 	
 	
 	
-	@CliCommand(value = "Typicalsecurity setup", help = "Setup Typicalsecurity addon")
-	public String setup(@CliOption(key = "entityPackage", mandatory = false, help = "entity package",specifiedDefaultValue="~.model",unspecifiedDefaultValue="~.model") String entityPackage,@CliOption(key = "controllerPackage", mandatory = false, help = "controller package",specifiedDefaultValue="~.web",unspecifiedDefaultValue="~.web") String controllerPackage) {
+	@CliCommand(value = "typicalsecurity setup", help = "Setup typicalsecurity addon")
+	public String setup(@CliOption(key = "entityPackage", mandatory = false, help = "entity package",specifiedDefaultValue="~.domain",unspecifiedDefaultValue="~.domain") String entityPackage,@CliOption(key = "controllerPackage", mandatory = false, help = "controller package",specifiedDefaultValue="~.web",unspecifiedDefaultValue="~.web") String controllerPackage) {
 		return operations.setup( entityPackage,  controllerPackage);
 	}
 }

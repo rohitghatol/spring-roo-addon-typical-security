@@ -4,7 +4,7 @@
   <groupId>com.xsoftwarelabs.spring.roo.addon.typicalsecurity</groupId>
   <artifactId>com.xsoftwarelabs.spring.roo.addon.typicalsecurity</artifactId>
   <packaging>bundle</packaging>
-  <version>0.1.3.BUILD-SNAPSHOT</version>
+  <version>0.1.4.BUILD-SNAPSHOT</version>
   <name>spring-roo-addon-typical-security</name>
   <organization>
     <name>XSoftwarelabs</name>

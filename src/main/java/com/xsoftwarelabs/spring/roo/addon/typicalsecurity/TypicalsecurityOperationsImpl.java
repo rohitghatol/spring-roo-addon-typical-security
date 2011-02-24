@@ -101,12 +101,12 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		// Create User entity
 		// -----------------------------------------------------------------------------------
 		shell.executeCommand("entity --class " + entityPackage
-				+ ".UserModel --testAutomatically");
+				+ ".User --testAutomatically --permitReservedWords");
 		shell.executeCommand("field string --fieldName firstName --sizeMin 1 --notNull");
 		shell.executeCommand("field string --fieldName lastName --sizeMin 1 --notNull");
 		shell.executeCommand("field string --fieldName emailAddress --sizeMin 1 --notNull --unique");
 		shell.executeCommand("field string --fieldName password --sizeMin 1 --notNull");
-		shell.executeCommand("field date --fieldName activationDate --type java.util.Date --sizeMin 1 ");
+		shell.executeCommand("field date --fieldName activationDate --type java.util.Date ");
 		shell.executeCommand("field string --fieldName activationKey ");
 		shell.executeCommand("field boolean --fieldName enabled ");
 		shell.executeCommand("field boolean --fieldName locked ");
@@ -115,7 +115,7 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		// Create Role entity
 		// -----------------------------------------------------------------------------------
 		shell.executeCommand("entity --class " + entityPackage
-				+ ".RoleModel --testAutomatically");
+				+ ".Role --testAutomatically --permitReservedWords");
 		shell.executeCommand("field string --fieldName roleName --sizeMin 1 --notNull --unique");
 		shell.executeCommand("field string --fieldName roleDescription --sizeMin --sizeMax 200 --notNull");
 
@@ -123,19 +123,22 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		// Create User Role Mapping
 		// -----------------------------------------------------------------------------------
 		shell.executeCommand("entity --class " + entityPackage
-				+ ".UserRoleModel --testAutomatically");
-		shell.executeCommand("field ref --fieldName userEntry --type "
-				+ entityPackage + ".UserModel --notNull");
-		shell.executeCommand("field ref --fieldName roleEntry --type "
-				+ entityPackage + ".RoleModel --notNull");
+				+ ".UserRole --testAutomatically");
+		shell.executeCommand("field reference --fieldName userEntry --type "
+				+ entityPackage + ".User --notNull");
+		shell.executeCommand("field reference --fieldName roleEntry --type "
+				+ entityPackage + ".Role --notNull");
 
 		// -----------------------------------------------------------------------------------
 		// Create Finders for find user by email address and find user role by
 		// user
 		// -----------------------------------------------------------------------------------
-		shell.executeCommand("finder add findUserModelsByEmailAddress --class ~.model.UserModel");
-		shell.executeCommand("finder add findUserModelsByActivationKeyAndEmailAddress --class ~.model.UserModel");
-		shell.executeCommand("finder add findUserRoleModelsByUserEntry --class ~.model.UserRoleModel");
+		shell.executeCommand("finder add findUsersByEmailAddress --class " + entityPackage
+				+ ".User");
+		shell.executeCommand("finder add findUsersByActivationKeyAndEmailAddress --class " + entityPackage
+				+ ".User");
+		shell.executeCommand("finder add findUserRolesByUserEntry --class " + entityPackage
+				+ ".UserRole");
 
 	}
 
@@ -152,22 +155,22 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		// Controller for User
 		// -----------------------------------------------------------------------------------
 		shell.executeCommand("controller scaffold --class " + controllerPackage
-				+ "UserModelController --entity " + entityPackage
-				+ ".UserModel");
+				+ ".UserController --entity " + entityPackage
+				+ ".User");
 
 		// -----------------------------------------------------------------------------------
 		// Controller for Role
 		// -----------------------------------------------------------------------------------
 		shell.executeCommand("controller scaffold --class " + controllerPackage
-				+ "RoleModelController --entity " + entityPackage
-				+ ".RoleModel");
+				+ ".RoleController --entity " + entityPackage
+				+ ".Role");
 
 		// -----------------------------------------------------------------------------------
 		// Controller for User Role
 		// -----------------------------------------------------------------------------------
 		shell.executeCommand("controller scaffold --class " + controllerPackage
-				+ "UserRoleModelController --entity " + entityPackage
-				+ ".UserRoleModel");
+				+ ".UserRoleController --entity " + entityPackage
+				+ ".UserRole");
 
 	}
 
@@ -194,6 +197,11 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		// applicationContext-security.xml
 		// ----------------------------------------------------------------------
 		injectDatabasebasedAuthProviderInXml(entityPackage);
+		
+		// ----------------------------------------------------------------------
+		// Autowire MessageDigestPasswordEncoder in applicationContext.xml
+		// ----------------------------------------------------------------------
+		autowireMessageDigestPasswordEncoder(entityPackage);
 
 		createMailSender();
 		addForgotPasswordRegisterUserToLoginPage();
@@ -260,7 +268,7 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 				.addChild(
 						new XmlElementBuilder("beans:property", webConfigDoc)
 								.addAttribute("name", "adminPassword")
-								.addAttribute("value", "admin").build())
+								.addAttribute("value", "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918").build())
 				.build();
 
 		Element authenticationManager = XmlUtils.findFirstElementByName(
@@ -277,8 +285,51 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 		Element newAuthProvider = new XmlElementBuilder(
 				"authentication-provider", webConfigDoc).addAttribute("ref",
 				"databaseAuthenticationProvider").build();
+		
 		authenticationManager.replaceChild(newAuthProvider, oldAuthProvider);
 
+		newAuthProvider.appendChild(
+				new XmlElementBuilder("password-encoder", webConfigDoc)
+					.addAttribute("hash", "sha-256").build());
+
+		XmlUtils.writeXml(mutableConfigXml.getOutputStream(), webConfigDoc);
+
+	}
+
+	/**
+	 * Inject MessageDigestPasswordEncoder bean in applicationContext.xml
+	 * 
+	 * @param entityPackage
+	 */
+	private void autowireMessageDigestPasswordEncoder(String entityPackage) {
+		String applicationContext = pathResolver.getIdentifier(
+				Path.SRC_MAIN_RESOURCES,
+				"META-INF/spring/applicationContext.xml");
+
+		MutableFile mutableConfigXml = null;
+		Document webConfigDoc;
+		try {
+			if (fileManager.exists(applicationContext)) {
+				mutableConfigXml = fileManager.updateFile(applicationContext);
+				webConfigDoc = XmlUtils.getDocumentBuilder().parse(
+						mutableConfigXml.getInputStream());
+			} else {
+				throw new IllegalStateException("Could not acquire "
+						+ applicationContext);
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
+
+		Element messageDigestPasswordEncoder = new XmlElementBuilder("bean", webConfigDoc)
+			.addAttribute("id", "messageDigestPasswordEncoder")
+			.addAttribute("class", "org.springframework.security.authentication.encoding.MessageDigestPasswordEncoder")
+			.addChild(
+				new XmlElementBuilder("constructor-arg", webConfigDoc)
+						.addAttribute("value", "sha-256").build()).build();
+		
+		webConfigDoc.getDocumentElement().appendChild(messageDigestPasswordEncoder);
+		
 		XmlUtils.writeXml(mutableConfigXml.getOutputStream(), webConfigDoc);
 
 	}
@@ -354,6 +405,11 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 				+ separator + "provider" + separator
 				+ "DatabaseAuthenticationProvider.java"),
 				"DatabaseAuthenticationProvider.java-template");
+
+		map.put(pathResolver.getIdentifier(Path.SRC_MAIN_JAVA,
+				finalControllerPackage.replace('.', separator) + separator
+						+ "UserController.java"),
+				"UserController.java-template");
 
 		String prefix = separator + "WEB-INF/views";
 
@@ -530,22 +586,22 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 						mutableApplicationProperties.getOutputStream()));
 
 				out.write(originalData);
-				out.write("label_com_training_spring_roo_model_usermodel_id=Id\n");
-				out.write("label_com_training_spring_roo_model_usermodel_lastname=Last Name\n");
-				out.write("label_com_training_spring_roo_model_usermodel_failedloginattempts=Failed\n");
-				out.write("label_com_training_spring_roo_model_usermodel_password=Password\n");
+				out.write("label_com_training_spring_roo_model_user_id=Id\n");
+				out.write("label_com_training_spring_roo_model_user_lastname=Last Name\n");
+				out.write("label_com_training_spring_roo_model_user_failedloginattempts=Failed\n");
+				out.write("label_com_training_spring_roo_model_user_password=Password\n");
 				out.write("label_com_training_spring_roo_model_userstatusmodel_failedloginattempts=Failed Login Attempts\n");
-				out.write("label_com_training_spring_roo_model_usermodel_repeat_password=Repeat Password\n");
-				out.write("label_com_training_spring_roo_model_usermodel_version=Version\n");
-				out.write("label_com_training_spring_roo_model_usermodel_firstname=First Name\n");
-				out.write("label_com_training_spring_roo_model_usermodel_plural=User Models\n");
-				out.write("label_com_training_spring_roo_model_usermodel=User Model\n");
-				out.write("label_com_training_spring_roo_model_usermodel_enabled=Enabled\n");
-				out.write("label_com_training_spring_roo_model_usermodel_repeatpassword=Repeat Password\n");
-				out.write("label_com_training_spring_roo_model_usermodel_locked=Locked\n");
-				out.write("label_com_training_spring_roo_model_usermodel_activationkey=Activation Key\n");
-				out.write("label_com_training_spring_roo_model_usermodel_emailaddress=Email Address\n");
-				out.write("label_com_training_spring_roo_model_usermodel_activationdate=Activation Date\n");
+				out.write("label_com_training_spring_roo_model_user_repeat_password=Repeat Password\n");
+				out.write("label_com_training_spring_roo_model_user_version=Version\n");
+				out.write("label_com_training_spring_roo_model_user_firstname=First Name\n");
+				out.write("label_com_training_spring_roo_model_user_plural=Users\n");
+				out.write("label_com_training_spring_roo_model_user=User\n");
+				out.write("label_com_training_spring_roo_model_user_enabled=Enabled\n");
+				out.write("label_com_training_spring_roo_model_user_repeatpassword=Repeat Password\n");
+				out.write("label_com_training_spring_roo_model_user_locked=Locked\n");
+				out.write("label_com_training_spring_roo_model_user_activationkey=Activation Key\n");
+				out.write("label_com_training_spring_roo_model_user_emailaddress=Email Address\n");
+				out.write("label_com_training_spring_roo_model_user_activationdate=Activation Date\n");
 
 				out.close();
 
