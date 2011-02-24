@@ -12,7 +12,7 @@ addon remove --bundleSymbolicName com.xsoftwarelabs.spring.roo.addon.typicalsecu
 
 //Install the Typical Security Addon
 
-osgi start --url http://spring-roo-addon-typical-security.googlecode.com/svn-history/r129/repo/com/xsoftwarelabs/spring/roo/addon/typicalsecurity/com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.2.BUILD/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.2.BUILD.jar
+osgi start --url http://spring-roo-addon-typical-security.googlecode.com/files/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.4.BUILD-SNAPSHOT.jar
 
 //Create a Sample Project to see the behavior
 
@@ -24,7 +24,7 @@ persistence setup --provider HIBERNATE --database HYPERSONIC_IN_MEMORY
 
 //Run the TypicalSecurity setup addon in default mode
 
-Typicalsecurity setup
+typicalsecurity setup
 
 //Run tomcat to see the effects
 
@@ -41,36 +41,37 @@ Youtube Video - http://www.youtube.com/watch?v=Y-kuYj8vsYU
 = Installation =
 
 Run following code on Roo Shell
-
-$roo >osgi start --url http://spring-roo-addon-typical-security.googlecode.com/svn-history/r129/repo/com/xsoftwarelabs/spring/roo/addon/typicalsecurity/com.xsoftwarelabs.spring.roo.addon.typicalsecurity/0.1.2.BUILD/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.2.BUILD.jar
+{{{
+$roo >osgi start --url http://spring-roo-addon-typical-security.googlecode.com/files/com.xsoftwarelabs.spring.roo.addon.typicalsecurity-0.1.4.BUILD-SNAPSHOT.jar
 
 
 $roo >osgi ps
-
+}}}
 You will see a line as follows, which indicates addon has been installed
 
-`[  72] [Active     ] [    1] spring-roo-addon-typical-security (0.1.1.BUILD)`
+`[  72] [Active     ] [    1] spring-roo-addon-typical-security (0.1.4.BUILD-SNAPSHOT)`
 
 = Uninstallation =
-
+{{{
 $roo > addon remove --bundleSymbolicName com.xsoftwarelabs.spring.roo.addon.typicalsecurity
-
+}}}
 = Usage =
+{{{
 $roo > project --topLevelPackage com.test --projectName `TestProject`
 
 $roo > persistence setup --database ... --provider ....
 
-$roo > Typicalsecurity setup
+$roo > typicalsecurity setup
+}}}
 
-
-Alternatively, you can provide options to Typicalsecurity setup
-
-$roo > Typicalsecurity setup --entityPackage ~.model --controllerPackage ~.web
-
+Alternatively, you can provide options to typicalsecurity setup
+{{{
+$roo > typicalsecurity setup --entityPackage ~.model --controllerPackage ~.web
+}}}
 Once you have injected Typical Security
-
+{{{
 $> mvn tomcat:run
-
+}}}
 and go to http://localhost:8080/TestProject
 
 This will take you to login page, login using "admin" and "admin". You will see Controllers for `UserModel`.
@@ -97,4 +98,11 @@ The addon does following
 
 = Code Changes =
 
-TBD
+In version 0.1.4, the following changes have been added.
+ # Password encryption
+ # Fixed SimpleMailMessage Autowire bug in SignUpController.java and ForgotPasswordController.java
+ # Fixed activationDate
+ # Fixed the finders 
+ # Renamed UserModel to User and RoleModel to Role.
+ # Renamed the Typicalsecurity command to typicalsecurity
+ # Set the default entity package to ~.domain (to align with how the rest of roo works).
