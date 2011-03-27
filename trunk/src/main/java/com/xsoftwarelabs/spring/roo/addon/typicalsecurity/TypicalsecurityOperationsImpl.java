@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.springframework.roo.classpath.operations.ClasspathOperations;
 import org.springframework.roo.metadata.MetadataService;
 import org.springframework.roo.model.JavaPackage;
 import org.springframework.roo.process.manager.FileManager;
@@ -59,14 +58,20 @@ public class TypicalsecurityOperationsImpl implements TypicalsecurityOperations 
 	private ProjectOperations projectOperations;
 	@Reference
 	private Shell shell;
-	@Reference
-	private ClasspathOperations classpathOperations;
-
+	
+	/*	Not available since Roo 1.1.2 (See ROO-2066)
+	 *	@Reference
+	 *	private ClasspathOperations classpathOperations;
+	 */
+	
 	private static char separator = File.separatorChar;
 
 	public boolean isCommandAvailable() {
-		return getPathResolver() != null
-				&& classpathOperations.isPersistentClassAvailable();
+		/*	Not available since Roo 1.1.2 (See ROO-2066)
+		 *		return getPathResolver() != null
+		 *				&& classpathOperations.isPersistentClassAvailable();
+		 */
+		return projectOperations.isProjectAvailable();
 	}
 
 	public String setup(String entityPackage, String controllerPackage) {
