@@ -31,6 +31,10 @@ persistence setup --provider HIBERNATE --database HYPERSONIC_IN_MEMORY
 {{{
 typicalsecurity setup
 }}}
+
+
+//After creating project using this addon, update the email.properties file with your email id and password to avoid spamming. location:`//<projectname>/target/classes/META-INF/spring`
+
 //Run tomcat to see the effects
 {{{
 mvn tomcat:run
